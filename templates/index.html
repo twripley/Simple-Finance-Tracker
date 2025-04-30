@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Family Finances</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <h1>Welcome to Family Finances</h1>
+    <a href="{{ url_for('upload') }}">Upload Bank Statement</a>
+    <a href="{{ url_for('reports') }}">View Reports</a>
+</body>
+</html>
