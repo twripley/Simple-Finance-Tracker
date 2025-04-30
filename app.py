@@ -2,10 +2,10 @@ from flask import Flask, render_template, request, redirect, url_for
 from models import db, Transaction, Category
 import pandas as pd
 import os
+from config import Config
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///finances.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config.from_object(Config)
 db.init_app(app)
 
 @app.route('/')
