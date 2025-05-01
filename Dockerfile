@@ -5,12 +5,10 @@ FROM python:3.13-bullseye
 WORKDIR /app
 
 # Copy project files into the container
-COPY ../app.py /app
-COPY ../config.py /app
-COPY ../models.py /app
+COPY *.py /app
 
 # Install dependencies
-RUN pip install --no-cache-dir -r ../requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Expose the port Flask runs on
 EXPOSE 5000
