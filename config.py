@@ -1,8 +1,5 @@
-DB_HOST = "sql.domain.com"
-DB_NAME = "SFT"
-DB_USER = "username"
-DB_PASS = "password"
+import os
 
 class Config:
-    SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://" + DB_USER + ":" + DB_PASS + "@" + DB_HOST + "/" + DB_NAME
+    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URI", "sqlite:///default-local.db")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
