@@ -1,3 +1,5 @@
+# Simple Finance Tracker
+
 from flask import Flask, render_template, request, redirect, url_for
 from models import db, Transaction, Category
 import pandas as pd
