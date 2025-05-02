@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: read
+      contents: write
       packages: write
 
     steps:
@@ -27,15 +27,31 @@ jobs:
       - name: Build and push Docker image
         run: |
           IMAGE_NAME=$(echo "ghcr.io/${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')
-          TAG=${GITHUB_REF##*/}
+          TAG=${GITHUB_REF##*/} # Extract tag name like v1.0.0
           docker build -t "$IMAGE_NAME:latest" -t "$IMAGE_NAME:$TAG" .
           docker push "$IMAGE_NAME:latest"
           docker push "$IMAGE_NAME:$TAG"
+
+      - name: Generate changelog from last tag
+        id: changelog
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ || echo "")
+          if [ -n "$PREV_TAG" ]; then
+            echo "Changelog since $PREV_TAG:"
+            git log --pretty=format:'- %s (%an)' $PREV_TAG..HEAD > changelog.txt
+          else
+            echo "Initial release changelog:"
+            git log --pretty=format:'- %s (%an)' > changelog.txt
+          fi
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          cat changelog.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release and Changelog
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
+          body: ${{ steps.changelog.outputs.changelog }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
