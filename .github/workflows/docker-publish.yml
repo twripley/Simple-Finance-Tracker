@@ -3,7 +3,7 @@ name: Build and Push Docker Image
 on:
   push:
     tags:
-      - 'v*'  # Run when pushing tags like v1.0.0
+      - 'v*'
 
 jobs:
   build-and-push:
@@ -31,3 +31,20 @@ jobs:
           docker build -t "$IMAGE_NAME:latest" -t "$IMAGE_NAME:$TAG" .
           docker push "$IMAGE_NAME:latest"
           docker push "$IMAGE_NAME:$TAG"
+
+      - name: Create GitHub Release and Changelog
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Send Gotify notification
+        run: |
+          curl -X POST "https://gotify.tylerripley.com/message?token=AE_roYUhK4A2pXy" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "title": "New Release Deployed",
+              "message": "Docker image for tag ${{ github.ref_name }} has been built and pushed to ghcr.io.",
+              "priority": 5
+            }'
