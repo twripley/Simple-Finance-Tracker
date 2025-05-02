@@ -11,6 +11,9 @@ jobs:
       contents: read
       packages: write
 
+    env:
+      IMAGE_NAME: ghcr.io/${{ github.actor }}/$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -23,8 +26,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: ghcr.io/${{ github.repository }}:latest
+        run: |
+          IMAGE_NAME=$(echo "ghcr.io/${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')
+          docker build -t "$IMAGE_NAME:latest" .
+          docker push "$IMAGE_NAME:latest"
