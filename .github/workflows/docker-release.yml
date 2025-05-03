@@ -8,7 +8,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: $(echo "ghcr.io/${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')
   GOTIFY_URL: https://gotify.tylerripley.com
   GOTIFY_TOKEN: AE_roYUhK4A2pXy
 
@@ -36,10 +36,6 @@ jobs:
       - name: Extract tag
         id: get_tag
         run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-
-      - name: Lowercase Image name
-        run: |
-          IMAGE_NAME=$(echo "ghcr.io/${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')
 
       - name: Build Docker image
         run: |
