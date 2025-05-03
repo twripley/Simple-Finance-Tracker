@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # ✅ Fetch full history so HEAD^ and tags work
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -36,12 +38,13 @@ jobs:
       - name: Generate changelog from last tag
         id: changelog
         run: |
-          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ || echo "")
+          git fetch --tags
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
           if [ -n "$PREV_TAG" ]; then
-            echo "Changelog since $PREV_TAG:"
+            echo "Generating changelog from $PREV_TAG to current tag"
             git log --pretty=format:'- %s (%an)' $PREV_TAG..HEAD > changelog.txt
           else
-            echo "Initial release changelog:"
+            echo "No previous tag found, generating full changelog"
             git log --pretty=format:'- %s (%an)' > changelog.txt
           fi
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
