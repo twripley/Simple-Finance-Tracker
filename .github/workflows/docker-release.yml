@@ -1,0 +1,88 @@
+name: Docker Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  GOTIFY_URL: https://gotify.tylerripley.com
+  GOTIFY_TOKEN: AE_roYUhK4A2pXy
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      packages: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Fetch full history so HEAD^ tags work
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract tag
+        id: get_tag
+        run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      - name: Lowercase Image name
+        run: |
+          IMAGE_NAME=$(echo "ghcr.io/${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')
+
+      - name: Build Docker image
+        run: |
+          docker build -t "$IMAGE_NAME:latest" -t "$IMAGE_NAME:$TAG" .
+
+      - name: Push Docker image
+        run: |
+          docker push "$IMAGE_NAME:$TAG"
+          docker push "$IMAGE_NAME:latest"
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          TAGS=$(git tag --sort=-creatordate)
+          TAG_ARRAY=($TAGS)
+          if [ "${#TAG_ARRAY[@]}" -lt 2 ]; then
+            echo "No previous tag to compare against."
+            echo "CHANGELOG=No previous tag available." >> $GITHUB_ENV
+          else
+            PREV_TAG=${TAG_ARRAY[1]}
+            CHANGELOG=$(git log --pretty=format:'- %s' "$PREV_TAG..$TAG")
+            if [ -z "$CHANGELOG" ]; then
+              CHANGELOG="No changes since last tag."
+            fi
+            echo "CHANGELOG<<EOF" >> $GITHUB_ENV
+            echo "$CHANGELOG" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+          fi
+
+      - name: Output changelog
+        run: echo "$CHANGELOG"
+
+    # Error notification step (runs if previous steps fail)
+    # Uses a separate job that only runs on failure
+  notify-on-failure:
+    needs: release
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Gotify error notification
+        run: |
+          curl -X POST "${{ env.GOTIFY_URL }}/message" \
+            -H "X-Gotify-Key: ${{ env.GOTIFY_TOKEN }}" \
+            -F "title=Docker Build Failed" \
+            -F "message=The Docker build for tag ${{ github.ref_name }} failed." \
+            -F "priority=8"
