@@ -39,6 +39,7 @@ jobs:
         id: changelog
         run: |
           git fetch --tags
+
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
           if [ -n "$PREV_TAG" ]; then
             echo "Generating changelog from $PREV_TAG to current tag"
@@ -47,9 +48,13 @@ jobs:
             echo "No previous tag found, generating full changelog"
             git log --pretty=format:'- %s (%an)' > changelog.txt
           fi
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          cat changelog.txt >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+
+          # Save changelog as an output safely
+          {
+            echo "changelog<<EOF"
+            cat changelog.txt
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release and Changelog
         uses: softprops/action-gh-release@v2
