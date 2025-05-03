@@ -21,5 +21,5 @@ ENV PYTHONUNBUFFERED=1
 # Set the Flask app environment variable (optional)
 ENV FLASK_APP=app.py
 
-# Start the Flask app
-CMD ["flask", "run", "--host=0.0.0.0"]
+# Start the Gunicorn App
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:app"]
