@@ -61,7 +61,7 @@ jobs:
             echo "CHANGELOG=No previous tag available." >> $GITHUB_ENV
           else
             PREV_TAG=${TAG_ARRAY[1]}
-            CHANGELOG=$(git log --pretty=format:'- %s' "$PREV_TAG..$TAG")
+            CHANGELOG=$(git log --pretty=format:'- [%h] %ad [%an]: %s' --date=short "$PREV_TAG..$TAG")
             if [ -z "$CHANGELOG" ]; then
               CHANGELOG="No changes since last tag."
             fi
