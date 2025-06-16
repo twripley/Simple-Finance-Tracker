@@ -2,12 +2,14 @@
 FROM python:3.13-bullseye
 
 # Set working directory
+RUN mkdir -p /app/templates
 WORKDIR /app
+
 
 # Copy project files into the container
 COPY *.py /app
 COPY requirements.txt /app
-COPY templates/ /app
+COPY templates/* /app/templates
 COPY db_init.sql /app
 
 # Install dependencies
