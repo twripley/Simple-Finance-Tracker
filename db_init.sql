@@ -1,4 +1,3 @@
-CREATE DATABASE finances;
 USE finances;
 
 CREATE TABLE transactions (
